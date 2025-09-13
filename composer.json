@@ -1,16 +1,20 @@
 {
-    "name": "sedur/filament-anexo-field",
-    "type": "library",
-    "autoload": {
-        "psr-4": {
-            "Sedur\\FilamentAnexoField\\": "src/"
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Sedur\\FilamentAnexoField\\FilamentAnexoFieldServiceProvider"
-            ]
-        }
+  "name": "sedur/filament-anexo-field",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Sedur\\FilamentAnexoField\\": "src/"
     }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Sedur\\FilamentAnexoField\\FilamentAnexoFieldServiceProvider"
+      ]
+    }
+  },
+  "require": {
+    "filament/filament": "^4.0"
+  }
 }

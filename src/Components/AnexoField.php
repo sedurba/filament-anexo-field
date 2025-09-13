@@ -27,8 +27,7 @@ class AnexoField extends Field
             ->mimeTypes(fn() => ['application/pdf'])
             ->rules(fn() => [])
             ->size(fn() => 1048)
-            ->attach(fn() => true)
-            ->dehydrated(false);
+            ->attach(fn() => true);
     }
 
     // === Setters ===
@@ -116,7 +115,7 @@ class AnexoField extends Field
 
     public static function workflowFailed(string $arquivo, array $contexto, int $codigoErro): never
     {
-        throw new RuntimeException(json_encode(['arquivo' => $arquivo, 'contexto' => $contexto, 'codigo' => $codigoErro]));
+        throw new \RuntimeException(json_encode(['arquivo' => $arquivo, 'contexto' => $contexto, 'codigo' => $codigoErro]));
     }
 
     // AnexoField.php
