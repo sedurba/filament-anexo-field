@@ -90,7 +90,9 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
             let finalizado = false
 
             for (const step of steps) {
-                this.updateLoading(step.titulo)
+                console.log("Processando: " + step.titulo);
+
+                await this.updateLoading(step.titulo, step.swal)
 
                 // Timer opcional para mostrar dica de demora
                 let tipTimer = null
@@ -113,14 +115,18 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                     contexto,
                 )
 
+                console.log("Processando resultado: ", res);
+
                 if (tipTimer) clearTimeout(tipTimer)
 
                 if (!res.success) {
+                    console.log("Sem sucesso no resultado.");
                     await this.showError(res.catch?.titulo, res.catch?.descricao)
                     throw new Error(res.catch?.descricao ?? 'Erro no step')
                 }
 
                 if (res.contexto.finalizar === true) {
+                    console.log("Finalização requisitada.");
                     this.showSuccess()
                     finalizado = true
                 }
@@ -128,17 +134,23 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                 contexto = res.contexto
 
                 if (finalizado) {
+                    console.log("Processo finalizado.");
                     break;
                 }
             }
 
             if (!finalizado) {
+                console.log("Não recebeu mensagem para finalizar, então vamos forçar pois senão fica travada.");
                 window.Swal.close()
             }
 
             if (contexto.mount_action && contexto.mount_action.key && contexto.mount_action.arguments) {
-                this.$wire.mountAction(contexto.mount_action.key, contexto.mount_action.arguments)
+                console.log("Action solicitada: " + contexto.mount_action.key);
+                this.$wire.call('mountAction', contexto.mount_action.key, contexto.mount_action.arguments)
                     .catch((err) => this.showError("Falha ao executar ação", res.message));
+                console.log("Action finalizada: " + contexto.mount_action.key);
+            } else {
+                console.log("Action não acionada.")
             }
 
             return contexto
@@ -157,9 +169,11 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
             })
         },
 
-        updateLoading(texto) {
-            window.Swal.update({text: texto})
-            window.Swal.showLoading()
+        async updateLoading(texto, opts) {
+            opts.text = texto;
+            console.log("Swal Options: " + opts)
+            await window.Swal.update(opts);
+            await window.Swal.showLoading();
         },
 
         async showError(titulo, descricao) {

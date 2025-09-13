@@ -130,7 +130,12 @@ class AnexoField extends Field
         $i = -1;
         return collect($this->workflowSteps)->map(function ($s) use (&$i) {
             $i++;
-            return ['i' => $i, 'titulo' => $s['titulo'] ?? 'Processando', 'timeout' => $s['timeout'] ?? null];
+            return [
+                'i' => $i,
+                'titulo' => $s['titulo'] ?? 'Processando',
+                'timeout' => $s['timeout'] ?? null,
+                'swal' => $s['swal'] ?? [],
+            ];
         })->values()->all();
     }
 }
