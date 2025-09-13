@@ -27,7 +27,13 @@ class AnexoField extends Field
             ->mimeTypes(fn() => ['application/pdf'])
             ->rules(fn() => [])
             ->size(fn() => 1048)
-            ->attach(fn() => true);
+            ->attach(fn() => true)
+            ->catch(function ($arquivo, $contexto, $codigoErro) {
+                return [
+                    'titulo' => 'Erro',
+                    'descricao' => 'Falha ao processar'
+                ];
+            });
     }
 
     // === Setters ===
