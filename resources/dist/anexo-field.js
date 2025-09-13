@@ -126,6 +126,10 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                 }
 
                 contexto = res.contexto
+
+                if (finalizado) {
+                    break;
+                }
             }
 
             if (!finalizado) {
