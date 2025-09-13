@@ -136,6 +136,11 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                 window.Swal.close()
             }
 
+            if (contexto.mount_action && contexto.mount_action.key && contexto.mount_action.arguments) {
+                this.$wire.mountAction(contexto.mount_action.key, contexto.mount_action.arguments)
+                    .catch((err) => this.showError("Falha ao executar ação", res.message));
+            }
+
             return contexto
         },
 
