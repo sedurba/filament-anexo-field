@@ -121,7 +121,12 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
 
                 if (!res.success) {
                     console.log("Sem sucesso no resultado.");
-                    await this.showError(res.catch?.titulo, res.catch?.descricao)
+                    await this.showError(
+                        res.catch?.titulo,
+                        res.catch?.descricao,
+                        res.catch?.botao,
+                        res.catch?.footer
+                    )
                     throw new Error(res.catch?.descricao ?? 'Erro no step')
                 }
 
@@ -176,12 +181,14 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
             await window.Swal.showLoading();
         },
 
-        async showError(titulo, descricao) {
+        async showError(titulo, descricao, botao, footer) {
             window.Swal.hideLoading()
             await window.Swal.update({
                 icon: 'error',
                 title: titulo ?? 'Erro',
-                text: descricao ?? 'Falha no processamento',
+                html: descricao ?? 'Falha no processamento',
+                footer: footer ?? null,
+                confirmButtonText: botao ?? 'Fechar',
                 showConfirmButton: true,
             })
         },

@@ -57,7 +57,10 @@ trait HasAnexoField
                 );
 
                 if (Arr::has($catchResponse, ['titulo', 'descricao'])) {
-                    return $catchResponse;
+                    return [
+                        'success' => false,
+                        'catch' => $catchResponse
+                    ];
                 }
             }
         } catch (\Throwable $e) {
