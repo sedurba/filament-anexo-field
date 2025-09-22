@@ -50,26 +50,12 @@ trait HasAnexoField
                 'success' => false,
                 'catch' => [
                     'titulo' => 'Erro',
-                    'descricao' => $e->getMessage()
+                    'descricao' => 'Falha ao processar arquivo.'
                 ]
             ];
 
         }
     }
-
-//    #[ExposedLivewireMethod]
-//    public function sedurAnexoDoUpload(string $uploadedFilename, string $dir = 'anexos'): string
-//    {
-//        $file = TemporaryUploadedFile::createFromLivewire($uploadedFilename);
-//
-//        dump($file);
-//
-//        $file->store($dir, config('sedur-anexo-field.upload_disk'));
-//
-//        dd($file);
-//
-//        return $file->getRealPath();
-//    }
 
     protected function sedurAnexoFindFormComponentByStatePath(string $statePath): ?Component
     {
