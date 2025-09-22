@@ -184,6 +184,9 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
         async showError(titulo, descricao, botao, footer) {
             window.Swal.hideLoading()
             await window.Swal.update({
+                imageUrl: null,
+                imageWidth: null,
+                imageHeight: null,
                 icon: 'error',
                 title: titulo ?? 'Erro',
                 html: descricao ?? 'Falha no processamento',
