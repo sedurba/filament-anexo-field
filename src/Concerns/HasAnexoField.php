@@ -6,7 +6,9 @@ use Filament\Forms\Components\Field;
 use Filament\Schemas\Schema;
 use Filament\Support\Components\Attributes\ExposedLivewireMethod;
 use Filament\Support\Components\Component;
+use Illuminate\Support\Arr;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Sedur\FilamentAnexoField\Components\AnexoField;
 
 /**
  * @property Schema $form
@@ -45,6 +47,14 @@ trait HasAnexoField
             ];
 
         } catch (\Throwable $e) {
+
+            if ($field instanceof AnexoField && method_exists($field, 'getCatchCallback')) {
+                $catchResponse = $field->getCatchCallback();
+
+                if (Arr::has($catchResponse, ['titulo', 'descricao'])) {
+                    return $catchResponse;
+                }
+            }
 
             return [
                 'success' => false,
