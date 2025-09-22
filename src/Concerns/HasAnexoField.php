@@ -49,7 +49,7 @@ trait HasAnexoField
 
         } catch (WorkflowFailedException $exception) {
             if ($field instanceof AnexoField && method_exists($field, 'getCatchCallback')) {
-                $field->makeSetUtility()($field->getStatePath(), null);
+                $field->makeSetUtility()($field->getStatePath(false), null);
 
                 $catchCallback = $field->getCatchCallback();
                 $catchResponse = $catchCallback(
