@@ -193,7 +193,18 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                 footer: footer ?? null,
                 confirmButtonText: botao ?? 'Fechar',
                 showConfirmButton: true,
-            })
+            });
+
+            this.resetInput();
+        },
+
+        resetInput() {
+            this.state = null
+            this.error = null
+            this.progress = 0
+            if (this.$refs.fileInput) {
+                this.$refs.fileInput.value = null // aqui realmente limpa o campo no navegador
+            }
         },
 
         showSuccess() {

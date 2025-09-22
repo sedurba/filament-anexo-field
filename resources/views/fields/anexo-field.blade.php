@@ -8,7 +8,9 @@
                 directory: '{{ $getDirectory() }}',
                 steps: @js($getWorkflowStepsMeta())
             })">
-        <input type="file" accept="{{ implode(',', $getMimeTypes()) }}"
+        <input type="file"
+               accept="{{ implode(',', $getMimeTypes()) }}"
+               x-ref="fileInput"
                class="block w-full text-sm file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-gray-200 dark:file:bg-gray-800 file:cursor-pointer"
                @change="handleFile($event.target.files[0])"/>
 
