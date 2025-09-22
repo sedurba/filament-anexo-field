@@ -9,6 +9,7 @@ use Filament\Support\Components\Component;
 use Illuminate\Support\Arr;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Sedur\FilamentAnexoField\Components\AnexoField;
+use Sedur\FilamentAnexoField\Exceptions\WorkflowFailedException;
 
 /**
  * @property Schema $form
@@ -46,25 +47,29 @@ trait HasAnexoField
                 'contexto' => $contexto
             ];
 
-        } catch (\Throwable $e) {
-
+        } catch (WorkflowFailedException $exception) {
             if ($field instanceof AnexoField && method_exists($field, 'getCatchCallback')) {
-                $catchResponse = $field->getCatchCallback();
+                $catchCallback = $field->getCatchCallback();
+                $catchResponse = $catchCallback(
+                    $exception->getArquivo(),
+                    $exception->getContexto(),
+                    $exception->getCodigoErro()
+                );
 
                 if (Arr::has($catchResponse, ['titulo', 'descricao'])) {
                     return $catchResponse;
                 }
             }
-
-            return [
-                'success' => false,
-                'catch' => [
-                    'titulo' => 'Erro',
-                    'descricao' => 'Falha ao processar arquivo.'
-                ]
-            ];
-
+        } catch (\Throwable $e) {
         }
+
+        return [
+            'success' => false,
+            'catch' => [
+                'titulo' => 'Erro',
+                'descricao' => 'Falha ao processar arquivo.'
+            ]
+        ];
     }
 
     protected function sedurAnexoFindFormComponentByStatePath(string $statePath): ?Component

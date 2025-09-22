@@ -4,6 +4,7 @@ namespace Sedur\FilamentAnexoField\Components;
 
 use Closure;
 use Filament\Forms\Components\Field;
+use Sedur\FilamentAnexoField\Exceptions\WorkflowFailedException;
 
 class AnexoField extends Field
 {
@@ -121,7 +122,7 @@ class AnexoField extends Field
 
     public static function workflowFailed(string $arquivo, array $contexto, int $codigoErro): never
     {
-        throw new \RuntimeException(json_encode(['arquivo' => $arquivo, 'contexto' => $contexto, 'codigo' => $codigoErro]));
+        throw new WorkflowFailedException($arquivo, $contexto, $codigoErro);
     }
 
     // AnexoField.php
