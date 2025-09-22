@@ -66,6 +66,7 @@ trait HasAnexoField
                 }
             }
         } catch (\Throwable $e) {
+            report($e);
         }
 
         return [
