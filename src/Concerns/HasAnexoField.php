@@ -42,8 +42,8 @@ trait HasAnexoField
                 $contexto = $cb(TemporaryUploadedFile::createFromLivewire($arquivo), $contexto);
             }
 
-            if (method_exists($this, 'callAfterStateUpdated')) {
-                $this->callAfterStateUpdated();
+            if (method_exists($field, 'callAfterStateUpdated')) {
+                $field->callAfterStateUpdated();
             }
 
             return [
