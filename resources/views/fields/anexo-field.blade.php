@@ -1,5 +1,3 @@
-@php $stepsMeta = $getWorkflowStepsMeta(); @endphp
-
 <x-dynamic-component :component="$getFieldWrapperView()" :field="$field">
     <div
             class="space-y-2"

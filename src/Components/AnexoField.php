@@ -16,7 +16,7 @@ class AnexoField extends Field
     protected Closure|bool $attach = true;
 
     protected $uploadCallback;
-    protected array $workflowSteps = [];
+    protected Closure|array $workflowSteps = [];
     protected $catchCallback;
 
     protected function setUp(): void
@@ -68,9 +68,10 @@ class AnexoField extends Field
         return $this;
     }
 
-    public function workflow(array $steps): static
+    public function workflow(Closure|array $steps): static
     {
         $this->workflowSteps = $steps;
+
         return $this;
     }
 
@@ -103,7 +104,7 @@ class AnexoField extends Field
 
     public function getWorkflowSteps(): array
     {
-        return $this->workflowSteps;
+        return $this->evaluate($this->workflowSteps);
     }
 
     public function getCatchCallback(): ?Closure
@@ -129,7 +130,7 @@ class AnexoField extends Field
     public function getWorkflowStepsMeta(): array
     {
         $i = -1;
-        return collect($this->workflowSteps)->map(function ($s) use (&$i) {
+        return collect($this->getWorkflowSteps())->map(function ($s) use (&$i) {
             $i++;
             return [
                 'i' => $i,
