@@ -6,9 +6,10 @@
  *
  * 1) Upload do arquivo via Livewire
  * 2) Exibição de progresso do upload no SweetAlert
- * 3) Remoção do progresso ao entrar nas etapas do workflow
- * 4) Execução de um workflow de steps no backend
- * 5) Tratamento de erros e feedback visual para o usuário
+ * 3) Fechamento do modal de upload ao mudar de etapa
+ * 4) Abertura de um novo modal limpo para os steps do workflow
+ * 5) Execução de um workflow de steps no backend
+ * 6) Tratamento de erros e feedback visual para o usuário
  */
 
 window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
@@ -19,27 +20,27 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         state: null,
 
         /**
-         * Indica se o sistema está ocupado processando algo.
+         * Indica se está processando algo.
          */
         busy: false,
 
         /**
-         * Mensagem de erro (caso ocorra).
+         * Mensagem de erro, se houver.
          */
         error: null,
 
         /**
-         * Porcentagem atual do upload.
+         * Progresso atual do upload.
          */
         progress: 0,
 
         /**
-         * Controla se o Swal atual está exibindo UI de progresso.
+         * Indica se o Swal atual é o modal de upload com progresso.
          */
-        showingProgress: false,
+        uploadSwalOpen: false,
 
         /**
-         * Handler principal chamado quando o usuário seleciona um arquivo.
+         * Handler principal chamado quando um arquivo é selecionado.
          */
         async handleFile(file) {
             if (!file) return
@@ -47,12 +48,13 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
             this.busy = true
             this.error = null
             this.progress = 0
+            this.uploadSwalOpen = false
 
             try {
                 /**
-                 * Abre o modal inicial com barra de progresso.
+                 * Abre o modal inicial de upload com barra de progresso.
                  */
-                this.showLoading('Salvando arquivo no servidor...', true)
+                this.showUploadLoading('Salvando arquivo no servidor...')
 
                 /**
                  * Gera uma chave única para o upload.
@@ -63,40 +65,42 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
                     ).toString(16))
 
                 /**
-                 * Realiza upload via Livewire.
+                 * Upload do arquivo via Livewire.
                  */
                 await this.$wire.upload(
                     `${statePath}.${fileKey}`,
                     file,
 
                     /**
-                     * Callback de sucesso do upload.
+                     * Sucesso no upload.
                      */
                     async (uploadedFilename) => {
                         console.log('Upload concluído:', uploadedFilename)
 
                         /**
-                         * Garante 100% antes de ir para os steps.
+                         * Garante que o usuário veja 100% antes de trocar de modal.
                          */
                         this.setProgress(100)
 
                         /**
-                         * Inicia o workflow backend.
+                         * Fecha o modal de upload e inicia o workflow.
                          */
                         await this.runSteps(uploadedFilename)
                     },
 
                     /**
-                     * Callback de erro do upload.
+                     * Erro no upload.
                      */
                     (err) => {
                         this.error = 'Falha no upload'
                         console.error(err)
+
+                        this.uploadSwalOpen = false
                         window.Swal.close()
                     },
 
                     /**
-                     * Callback de progresso do upload.
+                     * Atualização de progresso do upload.
                      */
                     (event) => {
                         if (event.lengthComputable) {
@@ -111,6 +115,7 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
             } catch (e) {
                 console.error(e)
                 this.error = e.message
+                this.uploadSwalOpen = false
                 window.Swal.close()
             } finally {
                 this.busy = false
@@ -123,18 +128,24 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         async runSteps(path) {
             let contexto = {}
             let finalizado = false
+            let workflowModalOpened = false
 
             for (const step of steps) {
                 console.log('Processando:', step.titulo)
 
                 /**
-                 * Ao mudar para uma etapa, remove a UI de progresso
-                 * e troca o modal para exibir apenas o conteúdo do step.
+                 * Na primeira etapa, fechamos o Swal do upload
+                 * e abrimos um novo Swal totalmente limpo.
                  */
-                await this.updateLoading(step.titulo, step.swal)
+                if (!workflowModalOpened) {
+                    await this.openWorkflowLoading(step.titulo, step.swal)
+                    workflowModalOpened = true
+                } else {
+                    await this.updateWorkflowLoading(step.titulo, step.swal)
+                }
 
                 /**
-                 * Timer opcional para exibir aviso de demora.
+                 * Timer opcional para aviso de demora.
                  */
                 let tipTimer = null
 
@@ -169,7 +180,7 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
                 if (tipTimer) clearTimeout(tipTimer)
 
                 /**
-                 * Se o step falhou, exibe erro.
+                 * Se falhou, mostra erro.
                  */
                 if (!res.success) {
                     await this.showError(
@@ -183,32 +194,29 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
                 }
 
                 /**
-                 * Se backend pediu finalização.
-                 */
-                if (res.contexto.finalizar === true) {
-                    this.showSuccess()
-                    finalizado = true
-                }
-
-                /**
                  * Atualiza contexto.
                  */
                 contexto = res.contexto
 
-                if (finalizado) {
+                /**
+                 * Se o backend sinalizou finalização.
+                 */
+                if (res.contexto.finalizar === true) {
+                    this.showSuccess()
+                    finalizado = true
                     break
                 }
             }
 
             /**
-             * Caso nenhum step finalize explicitamente, fecha o modal.
+             * Caso nenhum step finalize explicitamente.
              */
             if (!finalizado) {
                 window.Swal.close()
             }
 
             /**
-             * Se backend pediu execução de action do Filament.
+             * Se backend solicitou uma action do Filament.
              */
             if (
                 contexto.mount_action &&
@@ -230,15 +238,14 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         },
 
         /**
-         * Exibe um Swal de loading.
-         *
-         * Quando withProgress = true, renderiza barra + percentual.
+         * Abre o modal de upload com barra de progresso.
          */
-        showLoading(texto, withProgress = false) {
-            this.showingProgress = withProgress
+        showUploadLoading(texto) {
+            this.uploadSwalOpen = true
 
-            const html = withProgress
-                ? `
+            window.Swal.fire({
+                title: texto,
+                html: `
                     <div class="w-full mt-2">
                         <div id="swal-upload-text" style="margin-bottom:8px; font-size:14px;">
                             0%
@@ -262,12 +269,7 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
                             ></div>
                         </div>
                     </div>
-                `
-                : null
-
-            window.Swal.fire({
-                title: texto,
-                html,
+                `,
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
@@ -276,7 +278,7 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         },
 
         /**
-         * Atualiza o progresso no Swal durante o upload.
+         * Atualiza a barra e o texto de progresso.
          */
         setProgress(percent) {
             const textEl = document.getElementById('swal-upload-text')
@@ -292,18 +294,42 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         },
 
         /**
-         * Atualiza o modal quando entra em uma nova etapa.
+         * Fecha o Swal de upload e abre um novo Swal limpo para workflow.
          *
-         * Aqui removemos explicitamente a UI de progresso,
-         * definindo html como null.
+         * Esse é o ponto que realmente garante que a barra de progresso suma.
          */
-        async updateLoading(texto, opts = {}) {
-            this.showingProgress = false
+        async openWorkflowLoading(texto, opts = {}) {
+            if (this.uploadSwalOpen) {
+                window.Swal.close()
 
+                /**
+                 * Pequena pausa para garantir desmontagem do DOM do Swal anterior.
+                 */
+                await new Promise((resolve) => setTimeout(resolve, 50))
+            }
+
+            this.uploadSwalOpen = false
+
+            window.Swal.fire({
+                ...opts,
+                title: texto,
+                html: opts.html ?? null,
+                text: opts.text ?? null,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => window.Swal.showLoading(),
+            })
+        },
+
+        /**
+         * Atualiza o Swal já aberto durante os steps.
+         */
+        async updateWorkflowLoading(texto, opts = {}) {
             await window.Swal.update({
                 ...opts,
                 title: texto,
-                html: null,
+                html: opts.html ?? null,
                 text: opts.text ?? null,
                 showConfirmButton: false,
             })
@@ -315,7 +341,7 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
          * Exibe erro no SweetAlert.
          */
         async showError(titulo, descricao, botao, footer) {
-            this.showingProgress = false
+            this.uploadSwalOpen = false
 
             window.Swal.hideLoading()
 
@@ -332,13 +358,13 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         },
 
         /**
-         * Limpa o campo de upload no navegador.
+         * Limpa o campo e reseta estado interno.
          */
         resetInput() {
             this.state = null
             this.error = null
             this.progress = 0
-            this.showingProgress = false
+            this.uploadSwalOpen = false
 
             if (this.$refs.fileInput) {
                 this.$refs.fileInput.value = null
@@ -346,10 +372,10 @@ window.sedurAnexoFieldInit = function ({ statePath, directory, steps }) {
         },
 
         /**
-         * Exibe modal de sucesso.
+         * Exibe sucesso no SweetAlert.
          */
         showSuccess() {
-            this.showingProgress = false
+            this.uploadSwalOpen = false
 
             window.Swal.hideLoading()
 
