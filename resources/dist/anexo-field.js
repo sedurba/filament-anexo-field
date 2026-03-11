@@ -69,7 +69,9 @@ window.sedurAnexoFieldInit = function ({statePath, directory, steps}) {
                         if (event.lengthComputable) {
                             this.progress = Math.round(
                                 (event.loaded / event.total) * 100,
-                            )
+                            );
+
+                            console.log(this.progress + "%");
                         }
                     },
                 )
