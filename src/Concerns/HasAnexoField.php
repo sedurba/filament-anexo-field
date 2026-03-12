@@ -52,6 +52,7 @@ trait HasAnexoField
             ];
 
         } catch (WorkflowFailedException $exception) {
+            report($exception);
             if ($field instanceof AnexoField && method_exists($field, 'getCatchCallback')) {
                 $field->makeSetUtility()($field->getStatePath(false), null);
 
